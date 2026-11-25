@@ -1,16 +1,16 @@
-# LogerReplica.EFCore.Interceptors
+ï»¿# LogerReplica.EFCore.Interceptors
 
-×¨Îª MySQL ¶ÁĞ´·ÖÀëºÍÁ¬½Ó¹ÊÕÏ×ªÒÆÉè¼ÆµÄ EF Core À¹½ØÆ÷£¬²»ÒÀÀµÍâ²¿×é¼ş¡£¸Ã°üÄ¿±êÎª `netstandard2.0`£¬²¢Ê¹ÓÃ EF Core 3.1 µÄÀ¹½Ø API£¬Ê¹ÆäÊÊÓÃÓÚÊ¹ÓÃ EF Core 3.1 »ò¸ü¸ß°æ±¾µÄÓ¦ÓÃ³ÌĞò¡£EF Core 3.1 ÊÇ×îÔçÖ§³ÖÁ¬½ÓÀ¹½Ø API µÄ EF Core °æ±¾¡£
+ä¸“ä¸º MySQL è¯»å†™åˆ†ç¦»å’Œè¿æ¥æ•…éšœè½¬ç§»è®¾è®¡çš„ EF Core æ‹¦æˆªå™¨ï¼Œä¸ä¾èµ–å¤–éƒ¨ç»„ä»¶ã€‚è¯¥åŒ…ç›®æ ‡ä¸º `netstandard2.0`ï¼Œå¹¶ä½¿ç”¨ EF Core 3.1 çš„æ‹¦æˆª APIï¼Œä½¿å…¶é€‚ç”¨äºä½¿ç”¨ EF Core 3.1 æˆ–æ›´é«˜ç‰ˆæœ¬çš„åº”ç”¨ç¨‹åºã€‚EF Core 3.1 æ˜¯æœ€æ—©æ”¯æŒè¿æ¥æ‹¦æˆª API çš„ EF Core ç‰ˆæœ¬ã€‚
 
 EF Core interceptors for MySQL read/write routing and connection failover. The package targets `netstandard2.0` and uses EF Core 3.1 interception APIs, making it suitable for applications using EF Core 3.1 or later. EF Core 3.1 is the earliest EF Core line with the connection interception API used here.
 
-MySQL ÒÑ²âÊÔ¿ÉĞĞ£¬SqlServer¡¢ PostgreSQL¡¢Oracle µÈÊı¾İ¿âÎ´²âÊÔ£¬ÀíÂÛÉÏÒ²¿ÉĞĞ
+MySQL å·²æµ‹è¯•å¯è¡Œï¼ŒSqlServerã€ PostgreSQLã€Oracle ç­‰æ•°æ®åº“æœªæµ‹è¯•ï¼Œç†è®ºä¸Šä¹Ÿå¯è¡Œ
 
 Not Only For MySQL, but also theoretically applicable to SqlServer, PostgreSQL, Oracle, etc., though not tested.
 
 ## Configuration
 
-ÅäÖÃÄ£°å
+é…ç½®æ¨¡æ¿
 
 The interceptors read these values from `IConfiguration`:
 
@@ -22,17 +22,17 @@ The interceptors read these values from `IConfiguration`:
       "Server=replica-1;Database=app;User ID=app;Password=secret;",
       "Server=replica-2;Database=app;User ID=app;Password=secret;"
     ],
-    "ReadNodeCooldownSeconds": 60   // 5·ÖÖÓ¡£Á¬½Ó²»¿ÉÓÃºó£¬½øĞĞÀäÈ´£¬5·ÖÖÓÄÚ²»ÔÙ³¢ÊÔÁ¬½Ó¸Ã½Úµã¡£Ä¬ÈÏÖµÎª60Ãë¡£
+    "ReadNodeCooldownSeconds": 60   // 5åˆ†é’Ÿã€‚è¿æ¥ä¸å¯ç”¨åï¼Œè¿›è¡Œå†·å´ï¼Œ5åˆ†é’Ÿå†…ä¸å†å°è¯•è¿æ¥è¯¥èŠ‚ç‚¹ã€‚é»˜è®¤å€¼ä¸º60ç§’ã€‚
   }
 }
 ```
-`MasterDb` ±ØÌî¡£`SlaveDbs`¿ÉÉèÖÃÒ»¸ö»ò¶à¸öÖ»¶Á½Úµã¡£×Ô¶¯ÅäÖÃÈ¨ÖØ£¬µÚÒ»¸ö½ÚµãÈ¨ÖØ×î¸ß¡£Ê§°ÜµÄ´Ó¿â½Úµã½«±»ÔİÊ±Ìø¹ı£¬Ö÷½Úµã×÷Îª×îÖÕµÄ¶ÁÈ¡¶µµ×¡£`ReadNodeCooldownSeconds` Ä¬ÈÏÖµÎª60Ãë£¬±íÊ¾Á¬½Ó²»¿ÉÓÃºó£¬½øĞĞÀäÈ´£¬60ÃëÄÚ²»ÔÙ³¢ÊÔÁ¬½Ó¸Ã½Úµã¡£
+`MasterDb` å¿…å¡«ã€‚`SlaveDbs`å¯è®¾ç½®ä¸€ä¸ªæˆ–å¤šä¸ªåªè¯»èŠ‚ç‚¹ã€‚è‡ªåŠ¨é…ç½®æƒé‡ï¼Œç¬¬ä¸€ä¸ªèŠ‚ç‚¹æƒé‡æœ€é«˜ã€‚å¤±è´¥çš„ä»åº“èŠ‚ç‚¹å°†è¢«æš‚æ—¶è·³è¿‡ï¼Œä¸»èŠ‚ç‚¹ä½œä¸ºæœ€ç»ˆçš„è¯»å–å…œåº•ã€‚`ReadNodeCooldownSeconds` é»˜è®¤å€¼ä¸º60ç§’ï¼Œè¡¨ç¤ºè¿æ¥ä¸å¯ç”¨åï¼Œè¿›è¡Œå†·å´ï¼Œ60ç§’å†…ä¸å†å°è¯•è¿æ¥è¯¥èŠ‚ç‚¹ã€‚
 
 `MasterDb` is required. `SlaveDbs` can contain one or more read nodes. The first configured replica receives the highest default routing weight. Failed nodes are temporarily skipped, with the master kept as the final read fallback. `ReadNodeCooldownSeconds` defaults to 60 seconds, meaning that after a connection failure, the node will be skipped for 60 seconds before retrying.
 
 ## Registration
 
-ÈçºÎÊ¹ÓÃ 
+å¦‚ä½•ä½¿ç”¨ 
 
 Register both interceptors as singletons so their routing counters and node health state are shared across requests, then attach them to the EF Core options:
 
@@ -51,17 +51,20 @@ services.AddDbContext<AppDbContext>((serviceProvider, options) =>
         .AddInterceptors(readWriteInterceptor, connectionInterceptor);
 });
 ```
-À¹½ØÆ÷»á½«·Ç²éÑ¯ÃüÁîºÍÊÂÎñ»òĞ´ºó¶ÁÈ¡Â·ÓÉµ½Ö÷½Úµã¡£¶ÁÈ¡Á¬½Ó´ÓÅäÖÃµÄ¸±±¾ÖĞÑ¡Ôñ£¬ÔÚĞèÒªÊ±»ØÍËµ½Ö÷½Úµã¡£
+æ‹¦æˆªå™¨ä¼šå°†éæŸ¥è¯¢å‘½ä»¤å’Œäº‹åŠ¡æˆ–å†™åè¯»å–è·¯ç”±åˆ°ä¸»èŠ‚ç‚¹ã€‚è¯»å–è¿æ¥ä»é…ç½®çš„å‰¯æœ¬ä¸­é€‰æ‹©ï¼Œåœ¨éœ€è¦æ—¶å›é€€åˆ°ä¸»èŠ‚ç‚¹ã€‚
 
 The interceptors route non-query commands and transactional or write-following reads to the master. Read connections are selected from the configured replicas, falling back to the master when needed.
 
-## Ô¤ÆÚĞ§¹û
+## é¢„æœŸæ•ˆæœ
 
-Ö÷¿â3316+´Ó¿â3317+´Ó¿â3318
+ä¸»åº“3316+ä»åº“3317+ä»åº“3318
 
-Ğ´²Ù×÷¡¢ÊÂÎñ¡¢SaveChange»ñÈ¡×îĞÂIdÊ¹ÓÃÖ÷¿â3316Á¬½Ó£¬Èç¹ûÖ÷¿â3316Á¬½ÓÒì³££¬ÔòĞ´²Ù×÷¡¢ÊÂÎñ¾ù»áÊ§°Ü
+å†™æ“ä½œã€äº‹åŠ¡ã€SaveChangeè·å–æœ€æ–°Idç­‰ä½¿ç”¨ä¸»åº“3316è¿æ¥ï¼Œå¦‚æœä¸»åº“3316è¿æ¥å¼‚å¸¸ï¼Œåˆ™å†™æ“ä½œã€äº‹åŠ¡å‡ä¼šå¤±è´¥
 
-¶Á²Ù×÷ÓÅÏÈ·ÖÅä¸ø´Ó¿â3317£¬Æä´ÎÊÇ´Ó¿â3318¡£Èç¹û´Ó¿â3317Á¬½ÓÒì³££¬ÔòÓÅÏÈ·ÖÅä¸ø3318£¬Èç¹û´Ó¿â3318Ò²³öÏÖÁ¬½ÓÒì³££¬Ôò·ÖÅä¸øÖ÷¿â3316¶µµ×(¿ÉÄÜ»áÔì³ÉÖ÷¿âÑ¹Á¦)£¬Èç¹ûÖ÷¿â3316Ò²³öÏÖÁ¬½ÓÒì³££¬Ôò±¨´í£¬ÎŞ·¨²éÑ¯¡£
+è¯»æ“ä½œä¼˜å…ˆåˆ†é…ç»™ä»åº“3317ï¼Œå…¶æ¬¡æ˜¯ä»åº“3318ã€‚å¦‚æœä»åº“3317è¿æ¥å¼‚å¸¸ï¼Œåˆ™ä¼˜å…ˆåˆ†é…ç»™3318ï¼Œå¦‚æœä»åº“3318ä¹Ÿå‡ºç°è¿æ¥å¼‚å¸¸ï¼Œåˆ™åˆ†é…ç»™ä¸»åº“3316å…œåº•(å¯èƒ½ä¼šé€ æˆä¸»åº“å‹åŠ›)ï¼Œå¦‚æœä¸»åº“3316ä¹Ÿå‡ºç°è¿æ¥å¼‚å¸¸ï¼Œåˆ™æŠ¥é”™ï¼Œæ— æ³•æŸ¥è¯¢ã€‚
 
-±¨´íºó£¬ÓÃ»§ÔÙ´Îµã»÷²éÑ¯£¬»á¿ªÊ¼³¢ÊÔĞÂµÄÒ»ÂÖÁ¬½Ó¼ì²â£¬´æÔÚ¿ÉÓÃÁ¬½ÓÔò¶ÁÈ¡²¢·µ»ØÊı¾İ£¬²»´æÔÚÔò¼ÌĞø±¨´í¡£ËùÒÔÇëÀûÓÃºÃÕâ¶ÎÊ±¼ä£¬½«ÄãµÄÊı¾İ¿â»Ö¸´°É
+æŠ¥é”™åï¼Œç”¨æˆ·å†æ¬¡ç‚¹å‡»æŸ¥è¯¢ï¼Œä¼šå¼€å§‹å°è¯•æ–°çš„ä¸€è½®è¿æ¥æ£€æµ‹ï¼Œå­˜åœ¨å¯ç”¨è¿æ¥åˆ™è¯»å–å¹¶è¿”å›æ•°æ®ï¼Œä¸å­˜åœ¨åˆ™ç»§ç»­æŠ¥é”™ã€‚æ‰€ä»¥è¯·åˆ©ç”¨å¥½è¿™æ®µæ—¶é—´ï¼Œå°†ä½ çš„æ•°æ®åº“æ¢å¤å§
 
+## License
+
+MIT
