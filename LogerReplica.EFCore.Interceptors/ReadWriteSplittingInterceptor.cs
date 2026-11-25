@@ -80,7 +80,7 @@ namespace LogerReplica.EFCore.Interceptors
         /// <param name="result">默认拦截结果。</param>
         /// <param name="cancellationToken">取消令牌。</param>
         /// <returns>异步拦截结果。</returns>
-        public override async Task<InterceptionResult<int>> NonQueryExecutingAsync(
+        public override async ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
             DbCommand command,
             CommandEventData eventData,
             InterceptionResult<int> result,
@@ -129,7 +129,7 @@ namespace LogerReplica.EFCore.Interceptors
         /// <param name="result">默认拦截结果。</param>
         /// <param name="cancellationToken">取消令牌。</param>
         /// <returns>异步拦截结果。</returns>
-        public override async Task<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+        public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
             DbCommand command,
             CommandEventData eventData,
             InterceptionResult<DbDataReader> result,

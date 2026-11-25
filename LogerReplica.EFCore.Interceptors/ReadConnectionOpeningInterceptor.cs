@@ -87,7 +87,7 @@ namespace LogerReplica.EFCore.Interceptors
         /// <param name="result">默认拦截结果。</param>
         /// <param name="cancellationToken">取消令牌。</param>
         /// <returns>抑制 EF Core 默认打开动作的结果。</returns>
-        public override async Task<InterceptionResult> ConnectionOpeningAsync(
+        public override async ValueTask<InterceptionResult> ConnectionOpeningAsync(
             DbConnection connection,
             ConnectionEventData eventData,
             InterceptionResult result,
