@@ -108,8 +108,9 @@ namespace LogerReplica.EFCore.Interceptors
             CommandEventData eventData,
             InterceptionResult<DbDataReader> result)
         {
-            if (RequiresMaster(command))
+            if (RequiresMaster(command) || ConnectionRoutingState.IsMaster(command.Connection))
             {
+                // 如果当前命令需要访问主库，或者连接已经标记为主库，则切换到主库连接。
                 OpenMasterConnection(command.Connection);
             }
             else if (command.Connection == null
@@ -135,8 +136,9 @@ namespace LogerReplica.EFCore.Interceptors
             InterceptionResult<DbDataReader> result,
             CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (RequiresMaster(command))
+            if (RequiresMaster(command) || ConnectionRoutingState.IsMaster(command.Connection))
             {
+                // 如果当前命令需要访问主库，或者连接已经标记为主库，则切换到主库连接。
                 await OpenMasterConnectionAsync(command.Connection, cancellationToken)
                     .ConfigureAwait(false);
             }
@@ -190,6 +192,14 @@ namespace LogerReplica.EFCore.Interceptors
 
                     _coolingNodes.TryRemove(node.Name, out _);
                     ConnectionCoolingState.MarkHealthy(node.ConnectionString, node.Name);
+                    if (node.IsMaster)
+                    {
+                        ConnectionRoutingState.MarkMaster(connection);
+                    }
+                    else
+                    {
+                        ConnectionRoutingState.MarkRead(connection);
+                    }
                     return;
                 }
                 catch (Exception exception)
@@ -223,7 +233,8 @@ namespace LogerReplica.EFCore.Interceptors
             {
                 try
                 {
-                    SetConnectionString(connection, node.ConnectionString);
+                    await SetConnectionStringAsync(connection, node.ConnectionString)
+                        .ConfigureAwait(false);
                     if (connection.State != ConnectionState.Open)
                     {
                         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -231,6 +242,14 @@ namespace LogerReplica.EFCore.Interceptors
 
                     _coolingNodes.TryRemove(node.Name, out _);
                     ConnectionCoolingState.MarkHealthy(node.ConnectionString, node.Name);
+                    if (node.IsMaster)
+                    {
+                        ConnectionRoutingState.MarkMaster(connection);
+                    }
+                    else
+                    {
+                        ConnectionRoutingState.MarkRead(connection);
+                    }
                     return;
                 }
                 catch (OperationCanceledException)
@@ -254,6 +273,17 @@ namespace LogerReplica.EFCore.Interceptors
         /// <param name="connection">待打开的数据库连接。</param>
         private void OpenMasterConnection(DbConnection connection)
         {
+            if (connection == null)
+            {
+                throw new InvalidOperationException("数据库连接不能为空。");
+            }
+
+            if (ConnectionRoutingState.IsMaster(connection)
+                && connection.State == ConnectionState.Open)
+            {
+                return;
+            }
+
             try
             {
                 SetConnectionString(connection, _masterConnectionString);
@@ -264,6 +294,7 @@ namespace LogerReplica.EFCore.Interceptors
 
                 _coolingNodes.TryRemove(_readNodes[_readNodes.Length - 1].Name, out _);
                 ConnectionCoolingState.MarkHealthy(_masterConnectionString, "写操作");
+                ConnectionRoutingState.MarkMaster(connection);
             }
             catch
             {
@@ -282,9 +313,21 @@ namespace LogerReplica.EFCore.Interceptors
             DbConnection connection,
             CancellationToken cancellationToken)
         {
+            if (connection == null)
+            {
+                throw new InvalidOperationException("数据库连接不能为空。");
+            }
+
+            if (ConnectionRoutingState.IsMaster(connection)
+                && connection.State == ConnectionState.Open)
+            {
+                return;
+            }
+
             try
             {
-                SetConnectionString(connection, _masterConnectionString);
+                await SetConnectionStringAsync(connection, _masterConnectionString)
+                    .ConfigureAwait(false);
                 if (connection.State != ConnectionState.Open)
                 {
                     await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
@@ -292,12 +335,35 @@ namespace LogerReplica.EFCore.Interceptors
 
                 _coolingNodes.TryRemove(_readNodes[_readNodes.Length - 1].Name, out _);
                 ConnectionCoolingState.MarkHealthy(_masterConnectionString, "写操作");
+                ConnectionRoutingState.MarkMaster(connection);
             }
             catch
             {
                 MarkNodeCooling(_readNodes[_readNodes.Length - 1]);
                 throw;
             }
+        }
+
+        /// <summary>
+        /// 为事务拦截器提供同步主库切换能力。
+        /// </summary>
+        /// <param name="connection">即将创建事务的数据库连接。</param>
+        internal void OpenMasterConnectionForRouting(DbConnection connection)
+        {
+            OpenMasterConnection(connection);
+        }
+
+        /// <summary>
+        /// 为事务拦截器提供异步主库切换能力。
+        /// </summary>
+        /// <param name="connection">即将创建事务的数据库连接。</param>
+        /// <param name="cancellationToken">取消令牌。</param>
+        /// <returns>异步切换操作。</returns>
+        internal Task OpenMasterConnectionForRoutingAsync(
+            DbConnection connection,
+            CancellationToken cancellationToken)
+        {
+            return OpenMasterConnectionAsync(connection, cancellationToken);
         }
 
         /// <summary>
@@ -428,6 +494,24 @@ namespace LogerReplica.EFCore.Interceptors
             if (connection.State != ConnectionState.Closed)
             {
                 connection.Close();
+            }
+
+            connection.ConnectionString = connectionString;
+        }
+
+        /// <summary>
+        /// 异步关闭旧连接并设置新的数据库连接字符串。
+        /// </summary>
+        /// <param name="connection">待切换的数据库连接。</param>
+        /// <param name="connectionString">目标连接字符串。</param>
+        /// <returns>异步切换操作。</returns>
+        private static async Task SetConnectionStringAsync(
+            DbConnection connection,
+            string connectionString)
+        {
+            if (connection.State != ConnectionState.Closed)
+            {
+                await connection.CloseAsync().ConfigureAwait(false);
             }
 
             connection.ConnectionString = connectionString;

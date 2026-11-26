@@ -145,7 +145,7 @@ namespace LogerReplica.EFCore.Interceptors
       
 
         /// <summary>
-        /// 同步尝试打开候选节点连接。
+        /// 同步设置当前请求的候选节点连接字符串。并非真正连接，不会Open
         /// </summary>
         /// <param name="connection">待打开的数据库连接。</param>
         private void OpenConnection(DbConnection connection)
@@ -155,80 +155,73 @@ namespace LogerReplica.EFCore.Interceptors
                 throw new InvalidOperationException("数据库连接不能为空。");
             }
 
-            Exception lastException = null;
-            foreach (var node in GetCandidates())
+            if (ConnectionRoutingState.IsMaster(connection))
             {
-                try
-                {
-                    SetConnectionString(connection, node.ConnectionString);
-                    if (connection.State != ConnectionState.Open)
-                    {
-                        connection.Open();
-                    }
-
-                    ConnectionCoolingState.MarkHealthy(node.ConnectionString, node.Name);
-                    // 至少有一个节点成功连接后，直接返回，不再尝试其他节点。
-                    return;
-                }
-                catch (Exception exception)
-                {
-                    lastException = exception;
-                    if (!DatabaseCommandClassifier.IsSqlOrBusinessFailure(exception))
-                    {
-                        ConnectionCoolingState.MarkCooling(node.ConnectionString, node.Name, _cooldown);
-                    }
-                }
+                // 如果连接已经标记为主库，则直接使用主库连接字符串，不再尝试从库。
+                SetConnectionString(connection, _nodes[_nodes.Length - 1].ConnectionString);
+                return;
             }
-            // 标志着所有节点都无法连接，重置轮询索引，从第一个节点开始尝试连接
-            ResetRoundRobin();
-            throw new InvalidOperationException("所有数据库节点均无法连接。", lastException);
+
+            var node = GetCandidates().FirstOrDefault();
+            if (node == null)
+            {
+                throw new InvalidOperationException("没有可用的数据库节点。");
+            }
+
+            SetConnectionString(connection, node.ConnectionString);
+            MarkRoutingState(connection, node);
         }
 
         /// <summary>
-        /// 异步尝试打开候选节点连接。
+        /// 异步设置当前请求的候选节点连接字符串。并非真正连接，不会Open
         /// </summary>
         /// <param name="connection">待打开的数据库连接。</param>
         /// <param name="cancellationToken">取消令牌。</param>
         /// <returns>异步操作。</returns>
-        private async Task OpenConnectionAsync(
+        private Task OpenConnectionAsync(
             DbConnection connection,
             CancellationToken cancellationToken)
         {
+            _ = cancellationToken;
+
             if (connection == null)
             {
                 throw new InvalidOperationException("数据库连接不能为空。");
             }
 
-            Exception lastException = null;
-            foreach (var node in GetCandidates())
+            if (ConnectionRoutingState.IsMaster(connection))
             {
-                try
-                {
-                    SetConnectionString(connection, node.ConnectionString);
-                    if (connection.State != ConnectionState.Open)
-                    {
-                        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-                    }
-                    // 至少有一个节点成功连接后，直接返回，不再尝试其他节点。
-                    ConnectionCoolingState.MarkHealthy(node.ConnectionString, node.Name);
-                    return;
-                }
-                catch (OperationCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception exception)
-                {
-                    lastException = exception;
-                    if (!DatabaseCommandClassifier.IsSqlOrBusinessFailure(exception))
-                    {
-                        ConnectionCoolingState.MarkCooling(node.ConnectionString, node.Name, _cooldown);
-                    }
-                }
+                // 如果连接已经标记为主库，则直接使用主库连接字符串，不再尝试从库。
+                SetConnectionString(connection, _nodes[_nodes.Length - 1].ConnectionString);
+                return Task.CompletedTask;
             }
-            // 标志着所有节点都无法连接，重置轮询索引，从第一个节点开始尝试连接
-            ResetRoundRobin();
-            throw new InvalidOperationException("所有数据库节点均无法连接。", lastException);
+
+            var node = GetCandidates().FirstOrDefault();
+            if (node == null)
+            {
+                throw new InvalidOperationException("没有可用的数据库节点。");
+            }
+
+            SetConnectionString(connection, node.ConnectionString);
+            MarkRoutingState(connection, node);
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 根据候选节点更新连接的主从路由状态。
+        /// </summary>
+        /// <param name="connection">数据库连接。</param>
+        /// <param name="node">当前选中的节点。</param>
+        private static void MarkRoutingState(DbConnection connection, ReadNode node)
+        {
+            if (node.IsMaster)
+            {
+                ConnectionRoutingState.MarkMaster(connection);
+            }
+            else
+            {
+                ConnectionRoutingState.MarkRead(connection);
+            }
         }
 
         /// <summary>
@@ -316,15 +309,6 @@ namespace LogerReplica.EFCore.Interceptors
             }
 
             return slaves.Count - 1;
-        }
-
-        /// <summary>
-        /// 将下一次加权轮询重置到初始位置。
-        /// </summary>
-        private static void ResetRoundRobin()
-        {
-            // 重置轮询索引，从第一个节点开始尝试连接
-            Interlocked.Exchange(ref _nextWeightedSlot, -1);
         }
 
         /// <summary>
