@@ -1,8 +1,8 @@
 ﻿# LogerReplica.EFCore.Interceptors
 
-专为 MySQL 读写分离和连接故障转移设计的 EF Core 拦截器，不依赖外部组件。该包目标为 `netstandard2.0`，并使用 EF Core 3.1 的拦截 API，使其适用于使用 EF Core 3.1 或更高版本的应用程序。EF Core 3.1 是最早支持连接拦截 API 的 EF Core 版本。
+[LogerReplica.EFCore.Interceptors](https://github.com/logerlink/LogerReplica)————专为 MySQL 读写分离和连接故障转移设计的 EF Core 拦截器，不依赖外部组件。该包目标为 `.Net 5.0`，并使用 EF Core 5.0.17 的拦截 API，使其适用于使用 EF Core 5.0.17 或更高版本的应用程序。EF Core 3.1 是最早支持连接拦截 API 的 EF Core 版本。
 
-EF Core interceptors for MySQL read/write routing and connection failover. The package targets `netstandard2.0` and uses EF Core 3.1 interception APIs, making it suitable for applications using EF Core 3.1 or later. EF Core 3.1 is the earliest EF Core line with the connection interception API used here.
+EF Core interceptors for MySQL read/write routing and connection failover. The package targets `.Net 5.0` and uses EF Core 5.0.17 interception APIs, making it suitable for applications using EF Core 5.0.17 or later. EF Core 3.1 is the earliest EF Core line with the connection interception API used here.
 
 MySQL 已测试可行，SqlServer、 PostgreSQL、Oracle 等数据库未测试，理论上也可行
 
@@ -81,7 +81,7 @@ Mysql：主库3316+从库3317+从库3318
 |                 Delete                 |   OK   |
 |             Update+Delete              |   OK   |
 |                AddRange                |   OK   |
-| Query+Delete+Transaction+Update+Insert |        |
+| Query+Delete+Transaction+Update+Insert |   OK   |
 
 ## License
 
