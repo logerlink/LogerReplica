@@ -20,4 +20,8 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.17" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
   </ItemGroup>
+  <ItemGroup>
+	  <!-- 2. 把上一级目录的 README.md 打包进 .nupkg 的根目录（PackagePath="\"） -->
+	  <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>

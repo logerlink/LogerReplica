@@ -21,6 +21,7 @@ namespace LogerReplica.EFCore.Interceptors
         private readonly TimeSpan _nodeCooldown;
         private readonly ConcurrentDictionary<string, DateTimeOffset> _coolingNodes =
             new ConcurrentDictionary<string, DateTimeOffset>();
+        // 只会影响当前请求，不会跨请求共享状态
         private static readonly AsyncLocal<bool> HasWrittenInCurrentScope =
             new AsyncLocal<bool>();
         private int _nextWeightedSlot = -1;
@@ -200,6 +201,7 @@ namespace LogerReplica.EFCore.Interceptors
                     {
                         ConnectionRoutingState.MarkRead(connection);
                     }
+                    // 至少有一个读节点连接成功，退出循环
                     return;
                 }
                 catch (Exception exception)
@@ -208,7 +210,7 @@ namespace LogerReplica.EFCore.Interceptors
                     MarkNodeCooling(node);
                 }
             }
-
+            // 标志着所有读节点都无法连接，重置轮询索引，以便下一次请求从第一个节点开始尝试连接。
             ResetRoundRobin();
             throw new InvalidOperationException("所有读节点均无法连接。", lastException);
         }
@@ -250,6 +252,7 @@ namespace LogerReplica.EFCore.Interceptors
                     {
                         ConnectionRoutingState.MarkRead(connection);
                     }
+                    // 至少有一个读节点连接成功，退出循环
                     return;
                 }
                 catch (OperationCanceledException)
@@ -262,7 +265,7 @@ namespace LogerReplica.EFCore.Interceptors
                     MarkNodeCooling(node);
                 }
             }
-
+            // 标志着所有读节点都无法连接，重置轮询索引，以便下一次请求从第一个节点开始尝试连接。
             ResetRoundRobin();
             throw new InvalidOperationException("所有读节点均无法连接。", lastException);
         }

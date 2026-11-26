@@ -24,6 +24,7 @@ namespace LogerReplica.EFCore.Interceptors
                 || command.Transaction != null
                 || command.CommandType != CommandType.Text)
             {
+                // 如果命令为空、当前调用链已经发生写操作、命令在事务中或命令类型不是文本，则必须访问主库，即使命令是 SELECT 查询。
                 return true;
             }
 
